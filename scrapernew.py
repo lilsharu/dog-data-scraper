@@ -2,6 +2,7 @@ import requests
 import urllib.request
 import time
 import xlwt
+import re
 from bs4 import BeautifulSoup
 
 def addHeadersToSheet(worksheet):
@@ -9,15 +10,17 @@ def addHeadersToSheet(worksheet):
     style_text_wrap_font_bold_black_color = xlwt.easyxf('align:wrap on; font: bold on, color-index black')
     col_width = 128*30
     worksheet.write(0, 0, "BREED", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 1, "HEIGHT", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 2, "WEIGHT", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 3, "LIFE EXPECTANCY", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 4, "CHARACTERISTICS", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 5, "GROOMING FREQUENCY", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 6, "SHEDDING LEVEL", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 7, "ENERGY LEVEL", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 8, "TRAINABILITY", style_text_wrap_font_bold_black_color)
-    worksheet.write(0, 9, "TEMPERAMENT/DEMEANOR", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 1, "HEIGHT MIN", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 2, "HEIGHT MAX", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 3, "WEIGHT MIN", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 4, "WEIGHT MAX", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 5, "LIFE EXPECTANCY", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 6, "CHARACTERISTICS", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 7, "GROOMING FREQUENCY", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 8, "SHEDDING LEVEL", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 9, "ENERGY LEVEL", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 10, "TRAINABILITY", style_text_wrap_font_bold_black_color)
+    worksheet.write(0, 11, "TEMPERAMENT/DEMEANOR", style_text_wrap_font_bold_black_color)
 
     worksheet.col(0).width = col_width
     worksheet.col(1).width = col_width
@@ -29,24 +32,37 @@ def addHeadersToSheet(worksheet):
     worksheet.col(7).width = col_width
     worksheet.col(8).width = col_width
     worksheet.col(9).width = col_width
+    worksheet.col(10).width = col_width
+    worksheet.col(11).width = col_width
 
 def insertDataInSheet(worksheet, currentDogCounter, dog):
     breed = dog.find("div", {"id": "page-title"}).select('h1')[0].text.strip()
 
     print(str(currentDogCounter) + " " + breed)
 
-    listItems = ["NA", "NA", "NA", "NA"]
+    listItems = ["NA", "NA", "NA" ,"NA", "NA" ,"NA"]
     attributeList = dog.find("ul", {"class": "attribute-list"})
     for li in attributeList.find_all("li"):
         data = li.find_all("span")
+
         if (data[0].string == "Temperament:"):
             listItems[0] = data[1].string
+
         elif (data[0].string == "Height:"):
-            listItems[1] = data[1].string
+            height = data[1].string.replace("-", " ")
+            heightNums = filter(str.isdigit, height)
+            print(heightNums)
+            listItems[1] = min(heightNums)
+            listItems[2] = max(heightNums)
+
         elif (data[0].string == "Weight:"):
-            listItems[2] = data[1].string
+            weight = data[1].string.replace("-", " ")
+            weightNums = filter(str.isdigit, weight)
+            listItems[3] = min(weightNums)
+            listItems[4] = max(weightNums)
+
         elif (data[0].string == "Life Expectancy:"):
-            listItems[3] = data[1].string
+            listItems[5] = data[1].string
 
     groomingFrequency = "NA"
     shedding = "NA"
@@ -92,12 +108,14 @@ def insertDataInSheet(worksheet, currentDogCounter, dog):
     worksheet.write(currentDogCounter, 1, listItems[1])
     worksheet.write(currentDogCounter, 2, listItems[2])
     worksheet.write(currentDogCounter, 3, listItems[3])
-    worksheet.write(currentDogCounter, 4, listItems[0])
-    worksheet.write(currentDogCounter, 5, groomingFrequency)
-    worksheet.write(currentDogCounter, 6, shedding)
-    worksheet.write(currentDogCounter, 7, energyLevel)
-    worksheet.write(currentDogCounter, 8, trainability)
-    worksheet.write(currentDogCounter, 9, temperament)
+    worksheet.write(currentDogCounter, 4, listItems[4])
+    worksheet.write(currentDogCounter, 5, listItems[5])
+    worksheet.write(currentDogCounter, 6, listItems[0])
+    worksheet.write(currentDogCounter, 7, groomingFrequency)
+    worksheet.write(currentDogCounter, 8, shedding)
+    worksheet.write(currentDogCounter, 9, energyLevel)
+    worksheet.write(currentDogCounter, 10, trainability)
+    worksheet.write(currentDogCounter, 11, temperament)
 
 #Set Up the Excel File
 workbook = xlwt.Workbook()
